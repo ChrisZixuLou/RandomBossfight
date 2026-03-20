@@ -14,7 +14,7 @@ BOSS_RADIUS = 30
 BOSS_COLOR = (200, 20, 20)
 PROJECTILE_COLOR = (255, 200, 0)
 PROJECTILE_RADIUS = 8
-PROJECTILE_SPEED = 1.5
+PROJECTILE_SPEED = 3
 SPAWN_INTERVAL_MS = 600
 
 
@@ -34,9 +34,10 @@ def distance(a, b):
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     info = pygame.display.Info()
-    screen_width, screen_height = info.current_w, info.current_h
+    screen_width = info.current_w
+    screen_height = info.current_h
+    screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
     pygame.display.set_caption("Bossfight Phase 1")
     clock = pygame.time.Clock()
 
@@ -58,36 +59,44 @@ def main():
     pygame.time.set_timer(pygame.USEREVENT + 1, SPAWN_INTERVAL_MS)
 
     phase1_start = pygame.time.get_ticks()
+    phase1_end = phase1_start + 10000
+    phase1_complete = False
+
     running = True
     while running:
         now = pygame.time.get_ticks()
 
-        if now - phase1_start >= 10000:
-            # transition to phase 2
-            BossfightPhase2.phase2_loop(screen, WIDTH, HEIGHT)
-            running = False
-            break
+        if not phase1_complete and now >= phase1_end:
+            phase1_complete = True
+            pygame.time.set_timer(pygame.USEREVENT + 1, 0)  # stop projectile spawns
+            projectiles.clear()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.USEREVENT + 1:
+            elif event.type == pygame.USEREVENT + 1 and not phase1_complete:
                 projectiles.append(spawn_projectile())
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and phase1_complete:
+                # transition to phase 2 on spacebar
+                BossfightPhase2.phase2_loop(screen, WIDTH, HEIGHT)
+                running = False
+                break
 
         keys = pygame.key.get_pressed()
         PlayerControls.handle_input(keys, WIDTH, HEIGHT)
 
-        for p in projectiles:
-            p["pos"][0] += p["vel"][0]
-            p["pos"][1] += p["vel"][1]
+        if not phase1_complete:
+            for p in projectiles:
+                p["pos"][0] += p["vel"][0]
+                p["pos"][1] += p["vel"][1]
 
-        player_center = [PlayerControls.player_pos[0] + PlayerControls.PLAYER_SIZE / 2,
-                         PlayerControls.player_pos[1] + PlayerControls.PLAYER_SIZE / 2]
+            player_center = [PlayerControls.player_pos[0] + PlayerControls.PLAYER_SIZE / 2,
+                             PlayerControls.player_pos[1] + PlayerControls.PLAYER_SIZE / 2]
 
-        # collision test
-        for p in list(projectiles):
-            if distance(p["pos"], player_center) <= PROJECTILE_RADIUS + PlayerControls.PLAYER_SIZE / 2:
-                running = False
+            # collision test
+            for p in list(projectiles):
+                if distance(p["pos"], player_center) <= PROJECTILE_RADIUS + PlayerControls.PLAYER_SIZE / 2:
+                    running = False
 
         screen.fill((10, 10, 30))
 
@@ -99,6 +108,11 @@ def main():
             pygame.draw.circle(screen, PROJECTILE_COLOR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
 
         PlayerControls.draw_player(screen)
+
+        if phase1_complete:
+            font = pygame.font.SysFont(None, 48)
+            text = font.render("Phase 1 complete! Press SPACE for Phase 2", True, (255, 255, 255))
+            screen.blit(text, (40, 40))
 
         pygame.display.flip()
         clock.tick(FPS)

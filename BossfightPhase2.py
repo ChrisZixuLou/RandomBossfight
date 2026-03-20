@@ -2,6 +2,7 @@ import pygame
 import sys
 import random
 import PlayerControls
+import BossfightPhase3
 
 LASER_WARNING_COLOR = (255, 180, 0)
 LASER_COLOR = (255, 0, 0)
@@ -21,11 +22,14 @@ FPS = 60
 
 
 def player_hits_laser(player_rect, orientation, line_pos, thickness, width, height):
+    # Use center-based checks with a small safety margin to avoid near-miss false positives.
+    px, py = player_rect.center
+    hit_margin = 2  # requires 2 px overlap beyond visual boundary
+
     if orientation == "horizontal":
-        laser_rect = pygame.Rect(0, line_pos - thickness // 2, width, thickness)
+        return abs(py - line_pos) < (thickness / 2 + hit_margin)
     else:
-        laser_rect = pygame.Rect(line_pos - thickness // 2, 0, thickness, height)
-    return player_rect.colliderect(laser_rect)
+        return abs(px - line_pos) < (thickness / 2 + hit_margin)
 
 
 def distance(a, b):
@@ -44,73 +48,85 @@ def phase2_loop(screen, width, height):
     boss_pos = (width // 2, height // 2)
 
     projectiles = []
-    phase2_start = pygame.time.get_ticks()
-    last_laser_time = phase2_start
-    last_projectile_time = phase2_start
+    last_laser_time = pygame.time.get_ticks()
+    last_projectile_time = last_laser_time
     lasers = []  # {orientation,pos,start, warning_end, active_end}
+
+    phase2_start = pygame.time.get_ticks()
+    phase2_end = phase2_start + 10000
+    phase2_complete = False
 
     running = True
     while running:
         now = pygame.time.get_ticks()
 
-        if now - phase2_start >= PHASE2_DURATION_MS:
-            # end phase 2 and close pygame
-            running = False
-            break
+        if not phase2_complete and now >= phase2_end:
+            phase2_complete = True
+            projectiles.clear()
+            lasers.clear()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and phase2_complete:
+                BossfightPhase3.main()
+                running = False
+                break
 
         keys = pygame.key.get_pressed()
         PlayerControls.handle_input(keys, width, height)
 
-        # spawn phase 1-style projectiles
-        if now - last_projectile_time >= PROJECTILE_SPAWN_MS:
-            last_projectile_time = now
-            projectiles.append(spawn_projectile(boss_pos))
+        if not phase2_complete:
+            # spawn phase 1-style projectiles
+            if now - last_projectile_time >= PROJECTILE_SPAWN_MS:
+                last_projectile_time = now
+                projectiles.append(spawn_projectile(boss_pos))
 
-        # spawn warning laser event
-        if now - last_laser_time >= LASER_INTERVAL_MS:
-            last_laser_time = now
-            orientation = random.choice(["horizontal", "vertical"])
-            if orientation == "horizontal":
-                line_pos = random.randint(LASER_THICKNESS, height - LASER_THICKNESS)
-            else:
-                line_pos = random.randint(LASER_THICKNESS, width - LASER_THICKNESS)
+            # spawn warning laser event
+            if now - last_laser_time >= LASER_INTERVAL_MS:
+                last_laser_time = now
+                orientation = random.choice(["horizontal", "vertical"])
+                if orientation == "horizontal":
+                    line_pos = random.randint(LASER_THICKNESS, height - LASER_THICKNESS)
+                else:
+                    line_pos = random.randint(LASER_THICKNESS, width - LASER_THICKNESS)
 
-            lasers.append({
-                "orientation": orientation,
-                "line_pos": line_pos,
-                "warning_start": now,
-                "warning_end": now + LASER_WARNING_MS,
-                "active_end": now + LASER_WARNING_MS + LASER_ACTIVE_MS,
-            })
+                lasers.append({
+                    "orientation": orientation,
+                    "line_pos": line_pos,
+                    "warning_start": now,
+                    "warning_end": now + LASER_WARNING_MS,
+                    "active_end": now + LASER_WARNING_MS + LASER_ACTIVE_MS,
+                })
 
-        # move projectiles
-        for p in projectiles:
-            p["pos"][0] += p["vel"][0]
-            p["pos"][1] += p["vel"][1]
+            # move projectiles
+            for p in projectiles:
+                p["pos"][0] += p["vel"][0]
+                p["pos"][1] += p["vel"][1]
 
-        # check projectile collisions
-        player_center = [PlayerControls.player_pos[0] + PlayerControls.PLAYER_SIZE / 2,
-                         PlayerControls.player_pos[1] + PlayerControls.PLAYER_SIZE / 2]
+            # check projectile collisions
+            player_center = [PlayerControls.player_pos[0] + PlayerControls.PLAYER_SIZE / 2,
+                             PlayerControls.player_pos[1] + PlayerControls.PLAYER_SIZE / 2]
 
-        for p in list(projectiles):
-            if distance(p["pos"], player_center) <= PROJECTILE_RADIUS + PlayerControls.PLAYER_SIZE / 2:
-                running = False
-
-        # update and check collision on active laser beams
-        player_rect = pygame.Rect(PlayerControls.player_pos[0], PlayerControls.player_pos[1], PlayerControls.PLAYER_SIZE, PlayerControls.PLAYER_SIZE)
-
-        for laser in list(lasers):
-            if now >= laser["active_end"]:
-                lasers.remove(laser)
-                continue
-
-            # collision only while active
-            if now >= laser["warning_end"]:
-                if player_hits_laser(player_rect, laser["orientation"], laser["line_pos"], LASER_THICKNESS, width, height):
+            for p in list(projectiles):
+                if distance(p["pos"], player_center) <= PROJECTILE_RADIUS + PlayerControls.PLAYER_SIZE / 2:
                     running = False
+
+            # update and check collision on active laser beams
+            player_rect = pygame.Rect(PlayerControls.player_pos[0], PlayerControls.player_pos[1], PlayerControls.PLAYER_SIZE, PlayerControls.PLAYER_SIZE)
+
+            for laser in list(lasers):
+                if now >= laser["active_end"]:
+                    lasers.remove(laser)
+                    continue
+
+                # collision only while active
+                if now >= laser["warning_end"]:
+                    if player_hits_laser(player_rect, laser["orientation"], laser["line_pos"], LASER_THICKNESS, width, height):
+                        running = False
+        else:
+            player_rect = pygame.Rect(PlayerControls.player_pos[0], PlayerControls.player_pos[1], PlayerControls.PLAYER_SIZE, PlayerControls.PLAYER_SIZE)
+
 
         # draw
         screen.fill((10, 10, 30))
@@ -139,6 +155,11 @@ def phase2_loop(screen, width, height):
 
         PlayerControls.draw_player(screen)
 
+        if phase2_complete:
+            font = pygame.font.SysFont(None, 48)
+            text = font.render("Phase 2 complete! Press SPACE for Phase 3", True, (255, 255, 255))
+            screen.blit(text, (40, 40))
+
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -160,7 +181,8 @@ def main():
     # fallback in case run independently
     pygame.init()
     info = pygame.display.Info()
-    width, height = info.current_w, info.current_h
+    width = info.current_w
+    height = info.current_h
     screen = pygame.display.set_mode((width, height), pygame.FULLSCREEN)
     PlayerControls.init_player(width, height)
     boss_pos = (width // 2, height // 2)
