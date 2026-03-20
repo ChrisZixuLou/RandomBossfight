@@ -1,13 +1,14 @@
 import pygame
 import sys
 import PlayerControls
+import BossfightPhase1
 
 WIDTH = 800
 HEIGHT = 600
 FPS = 60
 
 
-def main():
+def run_player_mode():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("MainScript PlayerMove")
@@ -27,11 +28,18 @@ def main():
         screen.fill((30, 30, 30))
         PlayerControls.draw_player(screen)
         pygame.display.flip()
-
         clock.tick(FPS)
 
     pygame.quit()
-    sys.exit()
+
+
+def run_boss_phase():
+    BossfightPhase1.main()
+
+
+def main():
+    # Boss phase only. Keep run_player_mode available for reference/backwards compatibility.
+    run_boss_phase()
 
 
 if __name__ == "__main__":
