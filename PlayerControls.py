@@ -1,7 +1,7 @@
 import pygame
 
 # Player configuration
-PLAYER_SIZE = 40
+PLAYER_SIZE = 20 
 PLAYER_COLOR = (0, 200, 255)
 PLAYER_SPEED = 5
 

@@ -4,8 +4,8 @@ import random
 import PlayerControls
 import BossfightPhase3
 
-LASER_WARNING_COLOR = (255, 180, 0)
-LASER_COLOR = (255, 0, 0)
+LASER_WARNING_COLOUR = (255, 165, 0)
+LASER_COLOUR = (255, 0, 0)
 LASER_THICKNESS = 16
 LASER_INTERVAL_MS = 1800
 LASER_WARNING_MS = 900
@@ -13,10 +13,10 @@ LASER_ACTIVE_MS = 700
 PHASE2_DURATION_MS = 30000  # phase duration before end (30 seconds)
 
 # Phase 1 projectile carry-over
-PROJECTILE_COLOR = (255, 200, 0)
+PROJECTILE_COLOUR = (255, 100, 100)
 PROJECTILE_RADIUS = 8
 PROJECTILE_SPEED = 3
-PROJECTILE_SPAWN_MS = 600
+PROJECTILE_SPAWN_MS = 400
 
 FPS = 60
 
@@ -130,14 +130,14 @@ def phase2_loop(screen, width, height):
 
         # draw
         screen.fill((10, 10, 30))
-        pygame.draw.circle(screen, (200, 20, 20), boss_pos, 30)
+        pygame.draw.circle(screen, (128, 0, 128), boss_pos, 30)
 
         for laser in lasers:
             if now < laser["warning_end"]:
-                color = LASER_WARNING_COLOR
+                colour = LASER_WARNING_COLOUR
                 alpha = 140
             else:
-                color = LASER_COLOR
+                colour = LASER_COLOUR
                 alpha = 255
 
             if laser["orientation"] == "horizontal":
@@ -146,12 +146,12 @@ def phase2_loop(screen, width, height):
                 line_rect = pygame.Rect(laser["line_pos"] - LASER_THICKNESS // 2, 0, LASER_THICKNESS, height)
 
             surface = pygame.Surface((line_rect.width, line_rect.height), pygame.SRCALPHA)
-            surface.fill((*color, alpha))
+            surface.fill((*colour, alpha))
             screen.blit(surface, (line_rect.x, line_rect.y))
 
         # draw projectiles
         for p in projectiles:
-            pygame.draw.circle(screen, PROJECTILE_COLOR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
+            pygame.draw.circle(screen, PROJECTILE_COLOUR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
 
         PlayerControls.draw_player(screen)
 

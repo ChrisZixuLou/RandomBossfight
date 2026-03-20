@@ -11,8 +11,8 @@ FPS = 60
 # Boss in center
 BOSS_POS = (WIDTH // 2, HEIGHT // 2)
 BOSS_RADIUS = 30
-BOSS_COLOR = (200, 20, 20)
-PROJECTILE_COLOR = (255, 200, 0)
+BOSS_COLOUR = (128, 0, 128)
+PROJECTILE_COLOUR = (255, 100, 100)
 PROJECTILE_RADIUS = 8
 PROJECTILE_SPEED = 1.5
 SPAWN_INTERVAL_MS = 600
@@ -101,11 +101,11 @@ def main():
         screen.fill((10, 10, 30))
 
         # draw boss
-        pygame.draw.circle(screen, BOSS_COLOR, BOSS_POS, BOSS_RADIUS)
+        pygame.draw.circle(screen, BOSS_COLOUR, BOSS_POS, BOSS_RADIUS)
 
         # draw projectiles
         for p in projectiles:
-            pygame.draw.circle(screen, PROJECTILE_COLOR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
+            pygame.draw.circle(screen, PROJECTILE_COLOUR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
 
         PlayerControls.draw_player(screen)
 

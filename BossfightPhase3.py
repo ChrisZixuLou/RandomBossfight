@@ -9,24 +9,24 @@ HEIGHT = 600
 FPS = 60
 
 BOSS_RADIUS = 30
-BOSS_COLOR = (220, 40, 40)
+BOSS_COLOUR = (128, 0, 128)
 
 # phase1 projectile
-PROJECTILE_COLOR = (255, 200, 0)
+PROJECTILE_COLOUR = (255, 0, 0)
 PROJECTILE_RADIUS = 8
 PROJECTILE_SPEED = 5
-PROJECTILE_SPAWN_MS = 500
+PROJECTILE_SPAWN_MS = 200
 
 # phase2 lasers
-LASER_WARNING_COLOR = (255, 180, 0)
-LASER_COLOR = (255, 0, 0)
+LASER_WARNING_COLOUR = (255, 165, 0)
+LASER_COLOUR = (255, 0, 0)
 LASER_THICKNESS = 16
 LASER_INTERVAL_MS = 1000
 LASER_WARNING_MS = 800
 LASER_ACTIVE_MS = 700
 
 # phase3 spikes
-SPIKE_COLOR = (255, 255, 255)
+SPIKE_COLOUR = (255, 150, 150)
 SPIKE_THICKNESS = 10
 SPIKE_SPEED = 6
 SPIKE_SPAWN_MS = 1000
@@ -74,45 +74,56 @@ def phase3_loop(screen, width, height):
     spikes = []
 
     start = pygame.time.get_ticks()
+    phase3_end = start + PHASE3_DURATION_MS
     last_proj = start
     last_laser = start
     last_spike = start
+
+    phase3_complete = False
 
     running = True
     while running:
         now = pygame.time.get_ticks()
 
-        if now - start >= PHASE3_DURATION_MS:
-            BossfightPhase4.main()
-            running = False
-            break
+        if not phase3_complete and now >= phase3_end:
+            phase3_complete = True
+            # stop attacks; clear existing hazards
+            projectiles.clear()
+            lasers.clear()
+            spikes.clear()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and phase3_complete:
+                BossfightPhase4.main()
+                running = False
+                break
 
         keys = pygame.key.get_pressed()
         PlayerControls.handle_input(keys, width, height)
 
-        # spawn projectiles
-        if now - last_proj >= PROJECTILE_SPAWN_MS:
-            last_proj = now
-            projectiles.append(spawn_projectile(boss_pos))
+        if not phase3_complete:
+            # spawn projectiles
+            if now - last_proj >= PROJECTILE_SPAWN_MS:
+                last_proj = now
+                projectiles.append(spawn_projectile(boss_pos))
 
-        # spawn lasers
-        if now - last_laser >= LASER_INTERVAL_MS:
-            last_laser = now
-            orientation = random.choice(["horizontal", "vertical"])
-            if orientation == "horizontal":
-                line_pos = random.randint(LASER_THICKNESS, height - LASER_THICKNESS)
-            else:
-                line_pos = random.randint(LASER_THICKNESS, width - LASER_THICKNESS)
-            lasers.append({"orientation": orientation, "line_pos": line_pos, "warning_end": now + LASER_WARNING_MS, "active_end": now + LASER_WARNING_MS + LASER_ACTIVE_MS})
+            # spawn lasers
+            if now - last_laser >= LASER_INTERVAL_MS:
+                last_laser = now
+                orientation = random.choice(["horizontal", "vertical"])
+                if orientation == "horizontal":
+                    line_pos = random.randint(LASER_THICKNESS, height - LASER_THICKNESS)
+                else:
+                    line_pos = random.randint(LASER_THICKNESS, width - LASER_THICKNESS)
+                lasers.append({"orientation": orientation, "line_pos": line_pos, "warning_end": now + LASER_WARNING_MS, "active_end": now + LASER_WARNING_MS + LASER_ACTIVE_MS})
 
-        # spawn spikes
-        if now - last_spike >= SPIKE_SPAWN_MS:
-            last_spike = now
-            spikes.append(spawn_spike(width, height))
+            # spawn spikes
+            if now - last_spike >= SPIKE_SPAWN_MS:
+                last_spike = now
+                spikes.append(spawn_spike(width, height))
+
 
         # move projectiles
         for p in projectiles:
@@ -143,26 +154,32 @@ def phase3_loop(screen, width, height):
                 running = False
 
         screen.fill((10, 10, 30))
-        pygame.draw.circle(screen, BOSS_COLOR, boss_pos, BOSS_RADIUS)
+        pygame.draw.circle(screen, BOSS_COLOUR, boss_pos, BOSS_RADIUS)
 
         for p in projectiles:
-            pygame.draw.circle(screen, PROJECTILE_COLOR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
+            pygame.draw.circle(screen, PROJECTILE_COLOUR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
 
         for laser in lasers:
-            color = LASER_WARNING_COLOR if now < laser["warning_end"] else LASER_COLOR
+            colour = LASER_WARNING_COLOUR if now < laser["warning_end"] else LASER_COLOUR
             alpha = 140 if now < laser["warning_end"] else 255
             if laser["orientation"] == "horizontal":
                 line_rect = pygame.Rect(0, laser["line_pos"] - LASER_THICKNESS // 2, width, LASER_THICKNESS)
             else:
                 line_rect = pygame.Rect(laser["line_pos"] - LASER_THICKNESS // 2, 0, LASER_THICKNESS, height)
             surf = pygame.Surface((line_rect.width, line_rect.height), pygame.SRCALPHA)
-            surf.fill((*color, alpha))
+            surf.fill((*colour, alpha))
             screen.blit(surf, (line_rect.x, line_rect.y))
 
         for spike in spikes:
-            pygame.draw.rect(screen, SPIKE_COLOR, spike["rect"])
+            pygame.draw.rect(screen, SPIKE_COLOUR, spike["rect"])
 
         PlayerControls.draw_player(screen)
+
+        if phase3_complete:
+            font = pygame.font.SysFont(None, 50)
+            text = font.render("Phase 3 complete! Press SPACE for Phase 4", True, (255, 255, 255))
+            text_rect = text.get_rect(center=(width // 2, 50))
+            screen.blit(text, text_rect)
 
         pygame.display.flip()
         pygame.time.Clock().tick(FPS)

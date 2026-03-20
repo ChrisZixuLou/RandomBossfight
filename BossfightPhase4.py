@@ -8,30 +8,30 @@ HEIGHT = 600
 FPS = 60
 
 BOSS_RADIUS = 30
-BOSS_COLOR = (220, 40, 40)
+BOSS_COLOUR = (128, 0, 128)
 
 # phase1 projectile
-PROJECTILE_COLOR = (255, 200, 0)
+PROJECTILE_COLOUR = (255, 100, 100)
 PROJECTILE_RADIUS = 8
 PROJECTILE_SPEED = 5
-PROJECTILE_SPAWN_MS = 500
+PROJECTILE_SPAWN_MS = 200
 
 # phase2 lasers
-LASER_WARNING_COLOR = (255, 180, 0)
-LASER_COLOR = (255, 0, 0)
+LASER_WARNING_COLOUR = (255, 165, 0)
+LASER_COLOUR = (255, 0, 0)
 LASER_THICKNESS = 16
 LASER_INTERVAL_MS = 700
 LASER_WARNING_MS = 800
 LASER_ACTIVE_MS = 700
 
 # phase3 spikes
-SPIKE_COLOR = (255, 255, 255)
+SPIKE_COLOUR = (255, 150, 150)
 SPIKE_THICKNESS = 10
 SPIKE_SPEED = 8
-SPIKE_SPAWN_MS = 1000
+SPIKE_SPAWN_MS = 800
 
 # phase4 burst marks
-BURST_WARNING_COLOR = (150, 150, 255)
+BURST_WARNING_COLOUR = (255, 165, 0)
 BURST_WARNING_MS = 800
 BURST_PROJECTILES = 10
 BURST_PROJECTILE_SPEED = 4
@@ -187,27 +187,27 @@ def phase4_loop(screen, width, height):
                 running = False
 
         screen.fill((10, 10, 30))
-        pygame.draw.circle(screen, BOSS_COLOR, boss_pos, BOSS_RADIUS)
+        pygame.draw.circle(screen, BOSS_COLOUR, boss_pos, BOSS_RADIUS)
 
         for p in projectiles:
-            pygame.draw.circle(screen, PROJECTILE_COLOR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
+            pygame.draw.circle(screen, PROJECTILE_COLOUR, (int(p["pos"][0]), int(p["pos"][1])), PROJECTILE_RADIUS)
 
         for laser in lasers:
-            color = LASER_WARNING_COLOR if now < laser["warning_end"] else LASER_COLOR
+            colour = LASER_WARNING_COLOUR if now < laser["warning_end"] else LASER_COLOUR
             alpha = 140 if now < laser["warning_end"] else 255
             if laser["orientation"] == "horizontal":
                 line_rect = pygame.Rect(0, laser["line_pos"] - LASER_THICKNESS // 2, width, LASER_THICKNESS)
             else:
                 line_rect = pygame.Rect(laser["line_pos"] - LASER_THICKNESS // 2, 0, LASER_THICKNESS, height)
             surf = pygame.Surface((line_rect.width, line_rect.height), pygame.SRCALPHA)
-            surf.fill((*color, alpha))
+            surf.fill((*colour, alpha))
             screen.blit(surf, (line_rect.x, line_rect.y))
 
         for spike in spikes:
-            pygame.draw.rect(screen, SPIKE_COLOR, spike["rect"])
+            pygame.draw.rect(screen, SPIKE_COLOUR, spike["rect"])
 
         for warning in burst_warnings:
-            pygame.draw.circle(screen, BURST_WARNING_COLOR, warning["pos"], 24, 3)
+            pygame.draw.circle(screen, BURST_WARNING_COLOUR, warning["pos"], 24, 3)
 
         for shot in burst_shots:
             pygame.draw.circle(screen, (255, 100, 100), (int(shot["pos"][0]), int(shot["pos"][1])), 5)
