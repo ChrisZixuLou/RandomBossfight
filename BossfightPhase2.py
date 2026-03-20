@@ -10,7 +10,7 @@ LASER_THICKNESS = 16
 LASER_INTERVAL_MS = 1800
 LASER_WARNING_MS = 900
 LASER_ACTIVE_MS = 700
-PHASE2_DURATION_MS = 50000  # phase duration before end (50 seconds)
+PHASE2_DURATION_MS = 30000  # phase duration before end (30 seconds)
 
 # Phase 1 projectile carry-over
 PROJECTILE_COLOR = (255, 200, 0)

@@ -30,7 +30,7 @@ SPIKE_THICKNESS = 10
 SPIKE_SPEED = 6
 SPIKE_SPAWN_MS = 1000
 
-PHASE3_DURATION_MS = 100000 # phase duration before end (100 seconds)
+PHASE3_DURATION_MS = 60000 # phase duration before end (60 seconds)
 
 
 def distance(a, b):

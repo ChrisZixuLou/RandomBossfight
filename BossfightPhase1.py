@@ -59,7 +59,7 @@ def main():
     pygame.time.set_timer(pygame.USEREVENT + 1, SPAWN_INTERVAL_MS)
 
     phase1_start = pygame.time.get_ticks()
-    phase1_end = phase1_start + 20000  # 20 seconds
+    phase1_end = phase1_start + 10000  # 10 seconds
     phase1_complete = False
 
     running = True
