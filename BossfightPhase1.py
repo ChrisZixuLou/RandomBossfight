@@ -14,7 +14,7 @@ BOSS_RADIUS = 30
 BOSS_COLOR = (200, 20, 20)
 PROJECTILE_COLOR = (255, 200, 0)
 PROJECTILE_RADIUS = 8
-PROJECTILE_SPEED = 3
+PROJECTILE_SPEED = 1.5
 SPAWN_INTERVAL_MS = 600
 
 
@@ -59,7 +59,7 @@ def main():
     pygame.time.set_timer(pygame.USEREVENT + 1, SPAWN_INTERVAL_MS)
 
     phase1_start = pygame.time.get_ticks()
-    phase1_end = phase1_start + 10000
+    phase1_end = phase1_start + 20000  # 20 seconds
     phase1_complete = False
 
     running = True

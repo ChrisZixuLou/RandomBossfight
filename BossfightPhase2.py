@@ -10,12 +10,12 @@ LASER_THICKNESS = 16
 LASER_INTERVAL_MS = 1800
 LASER_WARNING_MS = 900
 LASER_ACTIVE_MS = 700
-PHASE2_DURATION_MS = 10000  # phase duration before end (10 seconds)
+PHASE2_DURATION_MS = 50000  # phase duration before end (50 seconds)
 
 # Phase 1 projectile carry-over
 PROJECTILE_COLOR = (255, 200, 0)
 PROJECTILE_RADIUS = 8
-PROJECTILE_SPEED = 1.5
+PROJECTILE_SPEED = 3
 PROJECTILE_SPAWN_MS = 600
 
 FPS = 60
@@ -53,7 +53,7 @@ def phase2_loop(screen, width, height):
     lasers = []  # {orientation,pos,start, warning_end, active_end}
 
     phase2_start = pygame.time.get_ticks()
-    phase2_end = phase2_start + 10000
+    phase2_end = phase2_start + 50000  # 50 seconds
     phase2_complete = False
 
     running = True
